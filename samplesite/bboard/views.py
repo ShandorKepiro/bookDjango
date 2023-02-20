@@ -1,8 +1,9 @@
-from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import reverse_lazy
 
+from .forms import BbForm
 from .models import Bb, Rubric
-from django.template import loader
+from django.views.generic.edit import CreateView
 
 
 def index(request):
@@ -25,3 +26,19 @@ def by_rubric(request, rubric_id):
     current_rubric = Rubric.objects.get(pk=rubric_id)
     context = {'bbs': bbs, 'rubric': rubrics, 'current_rubric': current_rubric}
     return render(request, 'bboard/by_rubric.html', context)
+
+
+class BbCreateView(CreateView):
+    # Контроллер-класс делаем производным от CreateView. Базовый класс знает, как создать форму,
+    # вывести на экран страницу с применением указанного шаблона.
+    template_name = 'bboard/create.html'  # путь к файлу шаблона, создающего страницу с формой
+    form_class = BbForm  # ссылка на класс формы, связанной с моделью
+    success_url = reverse_lazy('index')  # интернет-адрес для перенаправления после успешного сохранения данных
+    #  reverse_lazy() из django.urls принимает имя маршрута и значения всех входящих в маршрут URL-параметров.
+
+    def get_context_data(self, **kwargs):
+        # kwargs - произвольное число именованных элементов. При вызове функции, на его место передается список
+        # именованных аргументов, заключенных в словарь
+        context = super().get_context_data(**kwargs)
+        context['rubrics'] = Rubric.objects.all()
+        return context
